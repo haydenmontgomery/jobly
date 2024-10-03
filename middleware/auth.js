@@ -21,6 +21,7 @@ function authenticateJWT(req, res, next) {
     if (authHeader) {
       const token = authHeader.replace(/^[Bb]earer /, "").trim();
       res.locals.user = jwt.verify(token, SECRET_KEY);
+      console.log(res.locals.user);
     }
     return next();
   } catch (err) {
@@ -53,9 +54,26 @@ function ensureAdmin(req, res, next) {
   }
 }
 
+function ensureProperUserOrAdmin(req, res, next) {
+  try{
+    if(!res.locals.user){
+      throw new UnauthorizedError();
+    }
+    console.log(req.params.username, res.locals.user.username, res.locals.user.isAdmin)
+    if (req.params.username === res.locals.user.username) {
+      return next();
+    } else if (res.locals.user.isAdmin) {
+      return next();
+    }
+    throw new UnauthorizedError();
+  } catch (err) {
+    return next(err);
+  }
+}
 
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
-  ensureAdmin
+  ensureAdmin,
+  ensureProperUserOrAdmin,
 };
