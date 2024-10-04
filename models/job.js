@@ -6,43 +6,45 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 
 /** Related functions for jobs */
 
-class Jobs {
+class Job {
     /** Create a job (from data), update db, return new job data.
      *
-     * data should be { title, salary, equity, company_handle }
+     * data should be { title, salary, equity, companyHandle }
      *
-     * Returns { id, title, salary, equity, company_handle }
+     * Returns { id, title, salary, equity, companyHandle }
      *
-     * Throws BadRequestError if job already in database.
+     * Throws NotFoundError if the company handle does not exist in db.
      * */
      //****************Need to reformat this from company to jobs.*****************
-    /* static async create({ handle, name, description, numEmployees, logoUrl }) {
-      const duplicateCheck = await db.query(
+    static async create({ title, salary, equity, companyHandle }) {
+      const handleCheck = await db.query(
             `SELECT handle
-             FROM companies
-             WHERE handle = $1`,
-          [handle]);
-  
-      if (duplicateCheck.rows[0])
-        throw new BadRequestError(`Duplicate company: ${handle}`);
-  
+            FROM companies
+            WHERE handle = $1`,
+          [companyHandle]);
+      if (!handleCheck.rows[0]) throw new NotFoundError(`No company: ${companyHandle}`);
+
       const result = await db.query(
-            `INSERT INTO companies
-             (handle, name, description, num_employees, logo_url)
-             VALUES ($1, $2, $3, $4, $5)
-             RETURNING handle, name, description, num_employees AS "numEmployees", logo_url AS "logoUrl"`,
+            `INSERT INTO jobs
+             (title, salary, equity, company_handle)
+             VALUES ($1, $2, $3, $4)
+             RETURNING id, title, salary, equity, company_handle AS "companyHandle"`,
           [
-            handle,
-            name,
-            description,
-            numEmployees,
-            logoUrl,
+            title, 
+            salary,
+            equity,
+            companyHandle,
           ],
       );
-      const company = result.rows[0];
-  
-      return company;
-    }*/
+      const job = result.rows[0];
+
+      //numeric was returning as a string. This fixes that
+      const response = {
+        ...job,
+        equity: job.equity ? parseFloat(job.equity) : null
+      };
+      return response;
+    }
   
     /** Find all companies.
      *
@@ -174,4 +176,4 @@ class Jobs {
   }
   
   
-module.exports = Jobs;
+module.exports = Job;
