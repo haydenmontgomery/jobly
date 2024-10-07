@@ -6,7 +6,7 @@ const Company = require("../models/company");
 const { createToken } = require("../helpers/tokens");
 const Jobs = require("../models/job.js");
 
-const jobIds = []
+const jobIds = [];
 
 async function commonBeforeAll() {
   // noinspection SqlWithoutWhere
@@ -74,24 +74,24 @@ async function commonBeforeAll() {
     isAdmin: true,
   });
 
-  await Jobs.create({
+  jobIds[0] = (await Jobs.create({
     title: "j1",
     salary: 123456,
     equity: 0.123,
     companyHandle: "c1",
-  });
+  })).id;
 
-  await Jobs.create({
+  jobIds[1] = (await Jobs.create({
     title: "j2",
     salary: 654321,
     equity: 0,
     companyHandle: "c2",
-  });
+  })).id;
 
-  await Jobs.create({
+  jobIds[2] = (await Jobs.create({
     title: "j3",
     companyHandle: "c3",
-  });
+  })).id;
 }
 
 async function commonBeforeEach() {
@@ -117,4 +117,5 @@ module.exports = {
   commonAfterAll,
   u1Token,
   adminToken,
+  jobIds
 };

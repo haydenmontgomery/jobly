@@ -46,6 +46,11 @@ class Company {
 
   /** Find all companies.
    *
+   *  searchFilters (all optional):
+   * - minEmployees
+   * - maxEmployees
+   * - name
+   * 
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
@@ -86,7 +91,6 @@ class Company {
 
 
     query += " ORDER BY name";
-    console.log(query);
     const companiesRes = await db.query(query, values);
 
     return companiesRes.rows;

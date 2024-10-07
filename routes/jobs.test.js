@@ -11,6 +11,7 @@ const {
     commonAfterAll,
     u1Token,
     adminToken,
+    jobIds
 } = require("./_testCommon");
 const Job = require("../models/job.js");
 
@@ -172,21 +173,88 @@ describe("GET /jobs", function () {
 /************************************** GET /jobs/:id */
 describe("GET /jobs/:id", function () {
     test("works for anon", async function () {
-      const resp = await request(app).get(`/jobs/c1`);
-      expect(resp.body).toEqual({
-        job: {
-            title: "j1",
-            salary: 123456,
-            id: expect.any(Number),
-            equity: '0.123',
-            companyHandle: "c1",
-            companyName: "C1",
-        }
-        },
-      });
+        const resp = await request(app).get(`/jobs/${jobIds[0]}`);
+        expect(resp.body).toEqual({
+            job: {
+                id: jobIds[0],
+                title: "j1",
+                salary: 123456,
+                equity: '0.123',
+                company: {
+                    handle: "c1",
+                    name: "C1",
+                    description: "Desc1",
+                    numEmployees: 1,
+                    logoUrl: "http://c1.img",
+                },
+            },
+        });
     });
 
-/************************************** PATCH /jobs/:id */
+    test("not found for no job with that id", async function () {
+        const resp = await request(app).get(`/jobs/0`);
+        expect(resp.statusCode).toEqual(404);
+      });
+});
 
+/************************************** PATCH /jobs/:id */
+describe("PATCH /jobs/:id", function() {
+    test("works for admin", async function() {
+        const resp = await request(app).patch(`/jobs/${jobIds[0]}`)
+        .send({
+            title: "new",
+            salary: 2222,
+        })
+        .set("authorization", `Bearer ${adminToken}`);
+        expect(resp.body).toEqual({
+            job: {
+                id: expect.any(Number),
+                title: "new",
+                salary: 2222,
+                equity: "0.123",
+                companyHandle: "c1",
+            },
+        });
+    });
+
+    test("fails for users", async function() {
+        const resp = await request(app).patch(`/jobs/${jobIds[0]}`)
+        .send({
+            title: "new",
+            salary: 2222
+        })
+        .set("authorization", `Bearer ${u1Token}`);
+        expect(resp.statusCode).toEqual(401);
+
+    });
+
+    test("not found error for no job", async function() {
+        const resp = await request(app).patch(`/jobs/0`)
+        .send({
+            title: "new",
+            salary: 2222
+        })
+        .set("authorization", `Bearer ${adminToken}`);
+        expect(resp.statusCode).toEqual(404);
+    });
+
+    test("bad request on company_handle change", async function() {
+        const resp = await request(app).patch(`/jobs/${jobIds[0]}`)
+        .send({
+            companyHandle: "fail"
+        })
+        .set("authorization", `Bearer ${adminToken}`);
+        expect(resp.statusCode).toEqual(400);
+    });
+
+    test("bad request on improper data", async function() {
+        const resp = await request(app).patch(`/jobs/${jobIds[0]}`)
+        .send({
+            salary: "fail"
+        })
+        .set("authorization", `Bearer ${adminToken}`);
+        expect(resp.statusCode).toEqual(400);
+    });
+});
 
 /************************************** DELETE /jobs/:id */
