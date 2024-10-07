@@ -119,3 +119,59 @@ describe("get", function () {
         }
       });
 });
+
+describe("update", function () {
+  let updateData = {
+    title: "New",
+    salary: 500,
+    equity: "0.5",
+  };
+  test("works", async function () {
+    let job = await Job.update(jobIds[0], updateData);
+    expect(job).toEqual({
+      id: jobIds[0],
+      companyHandle: "c1",
+      ...updateData,
+    });
+  });
+
+  test("not found if no such job", async function () {
+    try {
+      await Job.update(0, {
+        title: "test",
+      });
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+
+  test("bad request with no data", async function () {
+    try {
+      await Job.update(jobIds[0], {});
+      fail();
+    } catch (err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
+  });
+});
+
+/************************************** remove */
+
+describe("remove", function () {
+  test("works", async function () {
+    await Job.remove(jobIds[0]);
+    const res = await db.query(
+        "SELECT id FROM jobs WHERE id=$1", [jobIds[0]]);
+    expect(res.rows.length).toEqual(0);
+  });
+
+  test("not found if no such job", async function () {
+    try {
+      await Job.remove(0);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});

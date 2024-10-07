@@ -258,3 +258,33 @@ describe("PATCH /jobs/:id", function() {
 });
 
 /************************************** DELETE /jobs/:id */
+
+describe("DELETE /jobs/:id", function() {
+    test("works for admin", async function() {
+        const resp = await request(app).delete(`/jobs/${jobIds[0]}`)
+                                        .set("authorization", `Bearer ${adminToken}`);
+        
+        expect(resp.body).toEqual({
+            deleted: jobIds[0]
+        });
+    });
+
+    test("fail for users", async function() {
+        const resp = await request(app).delete(`/jobs/${jobIds[0]}`)
+                                        .set("authorization", `Bearer ${u1Token}`);
+        
+        expect(resp.statusCode).toEqual(401);
+    });
+
+    test("fail for anon", async function() {
+        const resp = await request(app).delete(`/jobs/${jobIds[0]}`)
+        
+        expect(resp.statusCode).toEqual(401);
+    });
+
+    test("not found for no such job", async function () {
+        const resp = await request(app).delete(`/jobs/0`)
+                                        .set("authorization", `Bearer ${adminToken}`);
+        expect(resp.statusCode).toEqual(404);
+    });
+});
