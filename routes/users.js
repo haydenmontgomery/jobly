@@ -106,7 +106,7 @@ router.patch("/:username", ensureProperUserOrAdmin, async function (req, res, ne
 
 /** DELETE /[username]  =>  { deleted: username }
  *
- * Authorization required: login
+ * Authorization required: login or admin
  **/
 
 router.delete("/:username", ensureProperUserOrAdmin, async function (req, res, next) {
@@ -118,5 +118,20 @@ router.delete("/:username", ensureProperUserOrAdmin, async function (req, res, n
   }
 });
 
+/** POST /users/[username]/jobs/:id  =>  { applied: jobId }
+ *
+ * Posts a job application from user to the job.
+ * 
+ * Authorization required: login or admin
+ **/
 
+router.post("/:username/jobs/:id", ensureProperUserOrAdmin, async function (req, res, next) {
+  try {
+    //const jobId = req.params.id;
+    await User.jobApply(req.params.username, +req.params.id)
+    return res.json({ applied: `${+req.params.id}` })
+  } catch (err) {
+    return next(err);
+  }
+})
 module.exports = router;

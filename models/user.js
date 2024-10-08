@@ -10,6 +10,7 @@ const {
 } = require("../expressError");
 
 const { BCRYPT_WORK_FACTOR } = require("../config.js");
+const { jobIds } = require("./_testCommon.js");
 
 /** Related functions for users. */
 
@@ -203,6 +204,42 @@ class User {
     const user = result.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+  }
+
+  /**
+   * Adds an application to a job. No request body as the route is enough
+   */
+
+  static async jobApply(username, id) {
+    const jobCheck = await db.query(
+      `SELECT id
+      FROM jobs
+      WHERE id = $1
+      `,
+      [id]
+    );
+    const job = jobCheck.rows[0];
+    
+    if (!job) throw new NotFoundError(`No job: ${id}`);
+
+    const usernameCheck = await db.query(
+      `SELECT username
+      FROM users
+      WHERE username = $1
+      `,
+      [username]
+    );
+    
+    const user = usernameCheck.rows[0];
+    
+    if (!user) throw new NotFoundError(`No user: ${username}`);
+
+    await db.query(
+      `INSERT INTO applications
+          (username, job_id)
+          VALUES ($1, $2)`,
+          [username, id],
+    );
   }
 }
 

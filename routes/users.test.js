@@ -13,6 +13,7 @@ const {
   commonAfterAll,
   u1Token,
   adminToken,
+  jobIds,
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -346,6 +347,63 @@ describe("DELETE /users/:username", function () {
     const resp = await request(app)
         .delete(`/users/nope`)
         .set("authorization", `Bearer ${adminToken}`);
+    expect(resp.statusCode).toEqual(404);
+  });
+});
+
+/************************************** POST /users/:username/jobs/:id */
+
+describe("POST /users/:username/jobs/:id", function () {
+  test("works for admin on other user", async function () {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${jobIds[0]}`)
+      .set("authorization", `Bearer ${adminToken}`);
+
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      applied: `${jobIds[0]}`
+    });
+  });
+
+  test("works for user on self", async function () {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${jobIds[0]}`)
+      .set("authorization", `Bearer ${u1Token}`);
+
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      applied: `${jobIds[0]}`
+    });
+  });
+
+  test("unauthorized for user on other", async function () {
+    const resp = await request(app)
+      .post(`/users/u2/jobs/${jobIds[1]}`)
+      .set("authorization", `Bearer ${u1Token}`);
+
+    expect(resp.statusCode).toEqual(401);
+  });
+
+  test("unauthorized for anon", async function () {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${jobIds[0]}`);
+
+    expect(resp.statusCode).toEqual(401);
+  });
+
+  test("not found for bad user", async function () {
+    const resp = await request(app)
+      .post(`/users/bad/jobs/${jobIds[0]}`)
+      .set("authorization", `Bearer ${adminToken}`);
+
+    expect(resp.statusCode).toEqual(404);
+  });
+
+  test("not found for bad job", async function () {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/0`)
+      .set("authorization", `Bearer ${adminToken}`);
+
     expect(resp.statusCode).toEqual(404);
   });
 });
